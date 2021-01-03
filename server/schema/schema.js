@@ -2,12 +2,19 @@ const { GraphQLInt } = require("graphql");
 const graphql = require("graphql");
 const _ = require("lodash");
 
-const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLID } = graphql;
+const {
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLSchema,
+  GraphQLID,
+  GraphQLList,
+} = graphql;
 
 let books = [
   { name: "Norwegian Wood", genre: "Fiction", id: "1", authorId: "1" },
   { name: "Perfume", genre: "Fiction", id: "2", authorId: "2" },
   { name: "Atomic Habits", genre: "Self Help", id: "3", authorId: "3" },
+  { name: "Kafka on Shore", genre: "Fiction", id: "4", authorId: "1" },
 ];
 
 let authors = [
@@ -23,11 +30,11 @@ const BookType = new GraphQLObjectType({
     name: { type: GraphQLString },
     genre: { type: GraphQLString },
     author: {
-        type: AuthorType,
-        resolve(parent, args){
-            return 
-        }
-    }
+      type: AuthorType,
+      resolve(parent, args) {
+        return _.find(authors, { id: parent.authorId });
+      },
+    },
   }),
 });
 
@@ -37,6 +44,12 @@ const AuthorType = new GraphQLObjectType({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     age: { type: GraphQLInt },
+    books: {
+      type: new GraphQLList(BookType),
+      resolve(parent, args) {
+        return _.filter(books, { authorId: parent.id });
+      },
+    },
   }),
 });
 
@@ -55,6 +68,18 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLID } },
       resolve(parent, args) {
         return _.find(authors, { id: args.id });
+      },
+    },
+    books: {
+      type: new GraphQLList(BookType),
+      resolve(parent, args) {
+        return books;
+      },
+    },
+    authors: {
+      type: new GraphQLList(AuthorType),
+      resolve(parent, args) {
+        return authors;
       },
     },
   },
